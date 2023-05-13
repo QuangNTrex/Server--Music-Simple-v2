@@ -55,14 +55,14 @@ app.use(
   })
 );
 
-// app.use(function (req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "https://music-simple.web.app");
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept"
-//   );
-//   next();
-// });
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "https://audiosimplelife.web.app");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 // download
 
