@@ -24,6 +24,7 @@ app.use(
       "http://localhost:3001",
       "http://localhost:3000",
       "https://music-simple.web.app",
+      "https://audiosimplelife.web.app",
     ],
     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
     credentials: true,
