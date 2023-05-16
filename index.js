@@ -17,27 +17,16 @@ const StreamRouter = require("./routers/stream");
 const AuthRouter = require("./routers/auth");
 const ChannelRouter = require("./routers/channel");
 const app = express();
+// app.use(cors());
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3001",
-      "http://localhost:3000",
-      "https://music-simple.web.app",
-      "https://audiosimplelife.web.app",
-    ],
-    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-    credentials: true,
-  })
-);
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
+// app.use(function (req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
 app.use(express.json());
 
 app.set("trust proxy", 1);
@@ -55,6 +44,18 @@ app.use(
     store: store,
   })
 );
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3001",
+      "http://localhost:3000",
+      "https://music-simple.web.app",
+      "https://audiosimplelife.web.app",
+    ],
+    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+    credentials: true,
+  })
+);
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "https://audiosimplelife.web.app");
@@ -65,6 +66,7 @@ app.use(function (req, res, next) {
   next();
 });
 
+// abcs
 // download
 
 app.use("/auth", AuthRouter);

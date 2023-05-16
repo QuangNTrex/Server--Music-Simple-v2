@@ -94,6 +94,11 @@ module.exports.postAddChannel = (req, res, next) => {
                 };
                 cntVideoInfoLoader++;
                 console.log(cntVideoInfoLoader);
+              })
+              .catch((error) => {
+                console.log(159, error);
+                cntVideoInfoLoader++;
+                console.log(cntVideoInfoLoader);
               });
             while (process >= maxProcessPerOne) await delay(1000);
           }
@@ -101,6 +106,7 @@ module.exports.postAddChannel = (req, res, next) => {
           while (cntVideoInfoLoader !== channel.videoIds.length) {
             await delay(3000);
           }
+          loaderVideoInfos = loaderVideoInfos.filter((vd) => !!vd);
 
           channel.videoDetails = loaderVideoInfos.sort((vd1, vd2) => {
             return vd1.title.localeCompare(vd2.title);
@@ -126,4 +132,59 @@ module.exports.getAllChannel = (req, res, next) => {
 
 module.exports.getRelateUpdateChannels = (req, res, next) => {
   res.send({ result: { time: relateUpdateChannels } });
+};
+
+module.exports.getSupportReloadVideoDetail = (req, res, next) => {
+  const startTime = Date.now();
+  const channelId = req.params.channelId;
+  Channel.findOne({ channelId }).then((channel) => {
+    Channel.findByIdAndUpdate(channel._id).then(async (channel) => {
+      let loaderVideoInfos = [];
+      let cntVideoInfoLoader = 0,
+        process = 0;
+      const maxProcessPerOne = 100;
+
+      for (let i = 0; i < channel.videoIds.length; i++) {
+        loaderVideoInfos.push(null);
+        process++;
+        ytdl
+          .getBasicInfo(
+            `https://www.youtube.com/watch?v=${channel.videoIds[i]}`
+          )
+          .then((info) => {
+            process--;
+            loaderVideoInfos[i] = {
+              title: info.videoDetails.title,
+              videoId: channel.videoIds[i],
+              thumbnailUrl: info.videoDetails.thumbnails[0].url,
+              lengthSeconds: Number(info.videoDetails.lengthSeconds),
+              publishDate: Date.parse(info.videoDetails.publishDate),
+            };
+            cntVideoInfoLoader++;
+            console.log(cntVideoInfoLoader);
+          })
+          .catch((error) => {
+            console.log(159, error);
+            cntVideoInfoLoader++;
+            console.log(cntVideoInfoLoader);
+          });
+        while (process >= maxProcessPerOne) await delay(1000);
+      }
+
+      while (cntVideoInfoLoader !== channel.videoIds.length) {
+        await delay(3000);
+      }
+
+      loaderVideoInfos = loaderVideoInfos.filter((vd) => !!vd);
+      channel.videoDetails = loaderVideoInfos.sort((vd1, vd2) => {
+        return vd1.title.localeCompare(vd2.title);
+      });
+
+      channel.save().then(() => {
+        res.send({
+          result: { channel, time: (Date.now() - startTime) / 1000 },
+        });
+      });
+    });
+  });
 };

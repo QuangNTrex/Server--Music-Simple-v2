@@ -12,4 +12,9 @@ router.get("/channels", ChannelController.getAllChannel);
 
 router.get("/relate", ChannelController.getRelateUpdateChannels);
 
+router.get(
+  "/reload-video-detail/:channelId",
+  ChannelController.getSupportReloadVideoDetail
+);
+
 module.exports = router;
