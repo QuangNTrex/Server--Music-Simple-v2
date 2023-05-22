@@ -2,6 +2,7 @@ const { google } = require("googleapis");
 const ytdl = require("ytdl-core");
 const Channel = require("../models/channel");
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const Youtube = require("youtube-stream-url");
 
 let relateUpdateChannels = Date.now() + 1000 * 60 * 60 * 24 * 30;
 
@@ -54,71 +55,83 @@ module.exports.postSearchChannel = (req, res, next) => {
   });
 };
 
+const getInfo = async (videoId) => {
+  const info = await ytdl.getBasicInfo(
+    `https://www.youtube.com/watch?v=${videoId}`
+  );
+  return {
+    title: info.videoDetails.title,
+    videoId,
+    thumbnailUrl: info.videoDetails.thumbnails[0].url,
+    lengthSeconds: Number(info.videoDetails.lengthSeconds),
+    publishDate: Date.parse(info.videoDetails.publishDate),
+  };
+};
+
 module.exports.postAddChannel = (req, res, next) => {
   console.log("in postAddChannel");
   const channel = req.body.channel;
   // Sử dụng hàm đệ quy để lấy tất cả các video của một kênh Youtube
-  getAllVideos(channel.id.channelId, null, [], (err, videoIds) => {
+  getAllVideos(channel.id.channelId, null, [], async (err, videoIds) => {
     if (err) res.send({ error: { message: `Đã xảy ra lỗi: ${err}` } });
     else {
       const startTime = Date.now();
       relateUpdateChannels = Date.now();
-      Channel.create({
+      let channel = await Channel.create({
         channelId: channel.id.channelId,
         channelTitle: channel.snippet.channelTitle,
         description: channel.snippet.description,
         thumbnail: channel.snippet.thumbnails.default.url,
         videoIds: videoIds,
-      }).then((channel) => {
-        Channel.findByIdAndUpdate(channel._id).then(async (channel) => {
-          let loaderVideoInfos = [];
-          let cntVideoInfoLoader = 0,
-            process = 0;
-          const maxProcessPerOne = 100;
+      });
+      channel = await Channel.findByIdAndUpdate(channel._id);
+      let loaderVideoInfos = [];
+      let cntVideoInfoLoader = 0,
+        process = 0;
+      const maxProcessPerOne = 100;
 
-          for (let i = 0; i < channel.videoIds.length; i++) {
-            loaderVideoInfos.push(null);
-            process++;
-            ytdl
-              .getBasicInfo(
-                `https://www.youtube.com/watch?v=${channel.videoIds[i]}`
-              )
-              .then((info) => {
-                process--;
-                loaderVideoInfos[i] = {
-                  title: info.videoDetails.title,
-                  videoId: channel.videoIds[i],
-                  thumbnailUrl: info.videoDetails.thumbnails[0].url,
-                  lengthSeconds: Number(info.videoDetails.lengthSeconds),
-                  publishDate: Date.parse(info.videoDetails.publishDate),
-                };
-                cntVideoInfoLoader++;
-                console.log(cntVideoInfoLoader);
-              })
-              .catch((error) => {
-                console.log(159, error);
-                cntVideoInfoLoader++;
-                console.log(cntVideoInfoLoader);
-              });
-            while (process >= maxProcessPerOne) await delay(1000);
-          }
-
-          while (cntVideoInfoLoader !== channel.videoIds.length) {
-            await delay(3000);
-          }
-          loaderVideoInfos = loaderVideoInfos.filter((vd) => !!vd);
-
-          channel.videoDetails = loaderVideoInfos.sort((vd1, vd2) => {
-            return vd1.title.localeCompare(vd2.title);
+      for (let i = 0; i < channel.videoIds.length; i++) {
+        loaderVideoInfos.push(null);
+        process++;
+        ytdl
+          .getBasicInfo(
+            `https://www.youtube.com/watch?v=${channel.videoIds[i]}`
+          )
+          .then((info) => {
+            process--;
+            loaderVideoInfos[i] = {
+              title: info.videoDetails.title,
+              videoId: channel.videoIds[i],
+              thumbnailUrl: info.videoDetails.thumbnails[0].url,
+              lengthSeconds: Number(info.videoDetails.lengthSeconds),
+              publishDate: Date.parse(info.videoDetails.publishDate),
+            };
+            cntVideoInfoLoader++;
+            console.log(cntVideoInfoLoader, i, channel.videoIds.length);
+          })
+          .catch((error) => {
+            console.log(159, error);
+            console.log(channel.videoIds[i]);
+            cntVideoInfoLoader++;
+            console.log(cntVideoInfoLoader);
           });
+        while (process >= maxProcessPerOne) await delay(1000);
+      }
+      while (cntVideoInfoLoader !== channel.videoIds.length) {
+        await delay(3000);
+      }
+      loaderVideoInfos = loaderVideoInfos.filter((vd) => !!vd);
 
-          channel.save().then(() => {
-            res.send({
-              result: { channel, time: (Date.now() - startTime) / 1000 },
-            });
-          });
+      channel.videoDetails = loaderVideoInfos.sort((vd1, vd2) => {
+        return vd1.title.localeCompare(vd2.title);
+      });
+
+      channel.save().then(() => {
+        res.send({
+          result: { channel, time: (Date.now() - startTime) / 1000 },
         });
       });
+      // ==================================
     }
   });
 };

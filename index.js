@@ -5,6 +5,7 @@ const cors = require("cors");
 const session = require("express-session");
 const mongoose = require("mongoose");
 const MongoDBStore = require("connect-mongodb-session")(session);
+const Youtube = require("youtube-stream-url");
 const URI = process.env.MONGODB_URI;
 
 const store = new MongoDBStore({
@@ -78,11 +79,18 @@ app.use("/stream", StreamRouter);
 app.use("/channel", ChannelRouter);
 
 app.use("/get-info/:videoId", (req, res, next) => {
-  ytdl
-    .getBasicInfo(`https://www.youtube.com/watch?v=${req.params.videoId}`)
-    .then((info) => {
+  const videoId = req.params.videoId;
+  const time = Date.now();
+  Youtube.getInfo({ url: `https://www.youtube.com/watch?v=${videoId}` }).then(
+    (info) => {
       res.send({ info });
-    });
+    }
+  );
+  // ytdl
+  //   .getBasicInfo(`https://www.youtube.com/watch?v=${req.params.videoId}`)
+  //   .then((info) => {
+  //     res.send({ time: Date.now() - time });
+  //   });
 });
 
 app.listen(process.env.POST || 5000, () => {
