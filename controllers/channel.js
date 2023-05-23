@@ -70,18 +70,18 @@ const getInfo = async (videoId) => {
 
 module.exports.postAddChannel = (req, res, next) => {
   console.log("in postAddChannel");
-  const channel = req.body.channel;
+  const channelReq = req.body.channel;
   // Sử dụng hàm đệ quy để lấy tất cả các video của một kênh Youtube
-  getAllVideos(channel.id.channelId, null, [], async (err, videoIds) => {
+  getAllVideos(channelReq.id.channelId, null, [], async (err, videoIds) => {
     if (err) res.send({ error: { message: `Đã xảy ra lỗi: ${err}` } });
     else {
       const startTime = Date.now();
       relateUpdateChannels = Date.now();
       let channel = await Channel.create({
-        channelId: channel.id.channelId,
-        channelTitle: channel.snippet.channelTitle,
-        description: channel.snippet.description,
-        thumbnail: channel.snippet.thumbnails.default.url,
+        channelId: channelReq.id.channelId,
+        channelTitle: channelReq.snippet.channelTitle,
+        description: channelReq.snippet.description,
+        thumbnail: channelReq.snippet.thumbnails.default.url,
         videoIds: videoIds,
       });
       channel = await Channel.findByIdAndUpdate(channel._id);
