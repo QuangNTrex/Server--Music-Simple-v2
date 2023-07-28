@@ -1,1 +1,6 @@
-this is server app for stream music!
+- Mô tả dự án: Tên dự án là Music Simple, nó là một ứng dụng nghe nhạc đơn giản và có thêm một số tính năng tốt như tổng hợp channel youtube thành playlist, nghe offline...
+- Lý do chọn dự án: Dự án này là từ nhu cầu thực tế của tôi với tư cách là người yêu âm nhạc, và ứng dụng này mang trong mình khá nhiều thư viện và công nghệ khó.
+- Quá trình làm: trong 4 tháng nghiên cứu và xây dựng, tôi đã học hỏi được rất nhiều kĩ năng và công nghệ, cũng như kĩ năng tra cứu tài liệu. Thư viện chuyển đổi nhạc từ youtube đã từng là một trong số thư viện khó khăn đối với tôi.
+- Kết quả: Sau khi hoàn thành ứng dụng, nó có một số tính năng như nghe nhạc cơ bản, tổng hợp channel thành playlist, lưu offline (nhấn press vào nhạc trong 1 giây), ...
+- Note: + khi bạn muốn lưu offline nhạc hãy nhấn giữ vào bài hát trong 1 giây.
+        + hãy đợi 30s để các channel được load, sẽ có các chấm state ở góc trên trái màn hình biểu thị lần lượt trạng thái hoạt động của server.
